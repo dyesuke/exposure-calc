@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARIX C-41 現像ガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --border: #2e2e2e;
+    --accent: #e8a020;
+    --accent2: #c04020;
+    --text: #e8e0d4;
+    --muted: #888;
+    --success: #4caf82;
+    --danger: #e05050;
+    --info: #5090e0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 80px;
+  }
+
+  header {
+    width: 100%;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header h1 { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: .15em; color: var(--accent); text-transform: uppercase; }
+  header span { font-size: 11px; color: var(--muted); }
+
+  /* ---- Setup ---- */
+  .setup-screen { width: 100%; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .setup-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .setup-subtitle { font-size: 12px; color: var(--muted); }
+  .setup-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .setup-label { font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .1em; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; }
+
+  .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sel-btn {
+    padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all .2s;
+  }
+  .sel-btn:active { transform: scale(.97); }
+  .sel-btn.selected { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+  .sel-btn.push-selected { background: var(--danger); border-color: var(--danger); color: #fff; font-weight: 700; }
+
+  /* Cumulative counter */
+  .counter-row {
+    display: flex; align-items: center; gap: 12px; margin-top: 4px;
+  }
+  .counter-btn {
+    width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 20px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .2s; flex-shrink: 0;
+  }
+  .counter-btn:active { transform: scale(.95); background: var(--border); }
+  .counter-val {
+    font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500;
+    color: var(--accent); min-width: 40px; text-align: center;
+  }
+  .counter-label { font-size: 12px; color: var(--muted); }
+
+  .dev-time-preview {
+    margin-top: 14px; padding: 12px 14px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--success);
+    letter-spacing: .05em; text-align: center; line-height: 1.6;
+  }
+
+  .strict-note {
+    margin-top: 10px; padding: 10px 14px;
+    background: rgba(80,144,224,.08); border: 1px solid rgba(80,144,224,.25); border-radius: 8px;
+    font-size: 11px; color: #88aadd; line-height: 1.6;
+  }
+
+  .setup-start-btn {
+    width: 100%; padding: 18px; background: var(--accent); color: #000;
+    border: none; border-radius: 12px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all .2s; letter-spacing: .05em;
+  }
+  .setup-start-btn:active { transform: scale(.98); }
+
+  /* ---- Progress ---- */
+  .progress-wrap { width: 100%; padding: 0 24px; margin-top: 20px; }
+  .progress-bar-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; transition: width .5s ease; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+  /* ---- Phase strip ---- */
+  .phase-strip { width: 100%; padding: 16px 24px 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .phase-strip::-webkit-scrollbar { display: none; }
+  .phase-dot { flex-shrink: 0; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-family: 'DM Mono', monospace; border: 1px solid var(--border); color: var(--muted); transition: all .3s; white-space: nowrap; }
+  .phase-dot.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 500; }
+  .phase-dot.done { background: var(--border); color: var(--text); }
+
+  /* ---- Card ---- */
+  .card { width: calc(100% - 48px); margin: 20px 24px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .step-number { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: .1em; margin-bottom: 8px; }
+  .step-title { font-size: 22px; font-weight: 700; line-height: 1.3; margin-bottom: 12px; }
+  .step-desc { font-size: 14px; color: #bbb; line-height: 1.7; font-weight: 300; }
+  .step-desc strong { color: var(--accent); font-weight: 700; }
+  .step-desc .warn { color: var(--danger); }
+
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .tag { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-family: 'DM Mono', monospace; }
+  .tag.temp { background: rgba(232,160,32,.15); color: var(--accent); border: 1px solid rgba(232,160,32,.3); }
+  .tag.time { background: rgba(76,175,130,.15); color: var(--success); border: 1px solid rgba(76,175,130,.3); }
+  .tag.warn { background: rgba(224,80,80,.15); color: var(--danger); border: 1px solid rgba(224,80,80,.3); }
+  .tag.info { background: rgba(232,224,212,.1); color: var(--text); border: 1px solid var(--border); }
+  .tag.push { background: rgba(224,80,80,.15); color: var(--danger); border: 1px solid rgba(224,80,80,.3); }
+
+  /* Checklist */
+  .checklist { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .2s; font-size: 13px; user-select: none; }
+  .check-item:active { transform: scale(.98); }
+  .check-item.checked { background: rgba(76,175,130,.08); border-color: rgba(76,175,130,.3); color: var(--muted); text-decoration: line-through; }
+  .check-box { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .check-item.checked .check-box { background: var(--success); border-color: var(--success); color: #000; }
+
+  /* Agitation */
+  .agitation-hint { width: calc(100% - 48px); margin: 10px 24px 0; padding: 12px 16px; background: rgba(232,160,32,.08); border: 1px solid rgba(232,160,32,.2); border-radius: 8px; font-size: 12px; color: var(--accent); display: none; font-family: 'DM Mono', monospace; line-height: 1.6; }
+  .agitation-hint.visible { display: block; }
+
+  /* Timer */
+  .timer-area { width: calc(100% - 48px); margin: 12px 24px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: none; }
+  .timer-area.visible { display: block; }
+  .timer-display { font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 500; text-align: center; color: var(--accent); letter-spacing: .05em; }
+  .timer-display.running { color: var(--success); }
+  .timer-display.warning { color: var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .timer-label { text-align: center; font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; letter-spacing: .1em; }
+  .timer-progress { height: 3px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+  .timer-progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), var(--accent)); border-radius: 2px; transition: width 1s linear; }
+  .timer-btns { display: flex; gap: 8px; margin-top: 14px; }
+
+  /* Buttons */
+  .btn { flex: 1; padding: 14px; border: none; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+  .action-area { width: calc(100% - 48px); margin: 16px 24px 0; display: flex; gap: 10px; }
+
+  /* Complete */
+  .complete-screen { display: none; flex-direction: column; align-items: center; padding: 48px 24px; text-align: center; }
+  .complete-screen.visible { display: flex; }
+  .complete-icon { font-size: 56px; margin-bottom: 16px; }
+  .complete-title { font-size: 26px; font-weight: 700; margin-bottom: 16px; }
+
+  .complete-stats {
+    width: 100%; max-width: 320px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; text-align: left;
+  }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--muted); }
+  .stat-val { font-family: 'DM Mono', monospace; color: var(--accent); font-size: 13px; }
+
+  .next-session-box {
+    width: 100%; max-width: 320px; margin-top: 14px;
+    padding: 14px 18px;
+    background: rgba(80,144,224,.08); border: 1px solid rgba(80,144,224,.25); border-radius: 12px;
+    font-size: 12px; color: #88aadd; line-height: 1.7; text-align: left;
+  }
+  .next-session-box strong { color: #aac8ff; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MARIX C-41</h1>
+  <span>カラーネガ現像ガイド</span>
+</header>
+
+<!-- Setup Screen -->
+<div class="setup-screen" id="setupScreen">
+  <div>
+    <div class="setup-title">現像の設定</div>
+    <div class="setup-subtitle">液の累計本数・今回の本数・増感を設定してください</div>
+  </div>
+
+  <!-- 累計本数 -->
+  <div class="setup-section">
+    <div class="setup-label">液の累計使用本数（これまで）</div>
+    <div class="counter-row">
+      <button class="counter-btn" onclick="changeTotal(-1)">−</button>
+      <div class="counter-val" id="totalRollVal">0</div>
+      <div class="counter-label">本使用済み</div>
+      <button class="counter-btn" onclick="changeTotal(1)">＋</button>
+    </div>
+    <div class="strict-note">
+      💡 厳密モード：1本ごとに現像時間を3%ずつ延長します<br>
+      1本目 3:30 → 2本目 3:37 → 3本目 3:44…
+    </div>
+  </div>
+
+  <!-- 今回の本数 -->
+  <div class="setup-section">
+    <div class="setup-label">今回タンクに入れる本数</div>
+    <div class="btn-group" id="tankGroup">
+      <button class="sel-btn selected" onclick="selectTank(this, 1)">1本</button>
+      <button class="sel-btn" onclick="selectTank(this, 2)">2本</button>
+    </div>
+  </div>
+
+  <!-- 増感 -->
+  <div class="setup-section">
+    <div class="setup-label">増感 / 減感</div>
+    <div class="btn-group" id="pushGroup">
+      <button class="sel-btn selected" onclick="selectPush(this, 0)">±0（標準）</button>
+      <button class="sel-btn" onclick="selectPush(this, 1)">+1段増感</button>
+      <button class="sel-btn" onclick="selectPush(this, 2)">+2段増感</button>
+      <button class="sel-btn" onclick="selectPush(this, 3)">+3段増感</button>
+      <button class="sel-btn" onclick="selectPush(this, -1)">−1段減感</button>
+    </div>
+    <div class="dev-time-preview" id="devTimePreview">-</div>
+  </div>
+
+  <button class="setup-start-btn" onclick="startGuide()">現像を開始する →</button>
+</div>
+
+<!-- Guide Screen -->
+<div id="guideScreen" class="hidden" style="width:100%">
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-label">
+      <span id="progressText">-</span>
+      <span id="progressFrac">0 / 0</span>
+    </div>
+  </div>
+
+  <div class="phase-strip" id="phaseStrip"></div>
+
+  <div class="card" id="stepCard">
+    <div class="step-number" id="stepNumber"></div>
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-desc" id="stepDesc"></div>
+    <div class="tags" id="stepTags"></div>
+    <div class="checklist" id="checklist"></div>
+  </div>
+
+  <div class="agitation-hint" id="agitationHint"></div>
+
+  <div class="timer-area" id="timerArea">
+    <div class="timer-display" id="timerDisplay">0:00</div>
+    <div class="timer-label" id="timerLabel">タイマー</div>
+    <div class="timer-progress">
+      <div class="timer-progress-fill" id="timerProgressFill" style="width:100%"></div>
+    </div>
+    <div class="timer-btns">
+      <button class="btn btn-primary" id="timerStartBtn" onclick="startTimer()">▶ スタート</button>
+      <button class="btn btn-outline" onclick="resetTimer()">リセット</button>
+    </div>
+  </div>
+
+  <div class="action-area">
+    <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()">← 前へ</button>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">次のステップ →</button>
+  </div>
+</div>
+
+<!-- Complete Screen -->
+<div class="complete-screen" id="completeScreen">
+  <div class="complete-icon">🎞️</div>
+  <div class="complete-title">現像完了！</div>
+
+  <div class="complete-stats" id="completeStats"></div>
+  <div class="next-session-box" id="nextSessionBox"></div>
+
+  <div style="margin-top:20px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px">
+    <button class="btn btn-primary" onclick="continueSession()" style="width:100%;padding:16px;">続けてもう一本（液を継ぎ足す）</button>
+    <button class="btn btn-outline" onclick="backToSetup()" style="width:100%;padding:14px;font-size:13px;">最初からやり直す</button>
+  </div>
+</div>
+
+<script>
+// ---- State ----
+let totalRolls = 0;   // 液の累計使用本数（今回の前まで）
+let tankCount = 1;    // 今回タンクに入れる本数
+let pushStops = 0;    // -1, 0, 1, 2, 3
+
+const PUSH_MULT = { '-1': 0.8, '0': 1.0, '1': 1.3, '2': 1.75, '3': 2.5 };
+const BASE_SEC = 210; // 38℃ 3分30秒
+
+// 厳密モード：1本目からn本目の現像時間
+// 累計totalRolls本使用済み → 今回は (totalRolls+1)本目として計算
+function calcDevSec() {
+  const rollNum = totalRolls + 1; // 今回が何本目か
+  const strict = Math.round(BASE_SEC * Math.pow(1.03, rollNum - 1));
+  const pushed = Math.round(strict * (PUSH_MULT[String(pushStops)] || 1.0));
+  return pushed;
+}
+
+function fmtSec(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function fmtSecLong(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s > 0 ? `${m}分${s}秒（${sec}秒）` : `${m}分（${sec}秒）`;
+}
+
+function changeTotal(delta) {
+  totalRolls = Math.max(0, totalRolls + delta);
+  document.getElementById('totalRollVal').textContent = totalRolls;
+  updatePreview();
+}
+
+function selectTank(btn, val) {
+  tankCount = val;
+  document.querySelectorAll('#tankGroup .sel-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updatePreview();
+}
+
+function selectPush(btn, val) {
+  pushStops = val;
+  document.querySelectorAll('#pushGroup .sel-btn').forEach(b => b.classList.remove('selected','push-selected'));
+  if (val > 0) btn.classList.add('push-selected');
+  else btn.classList.add('selected');
+  updatePreview();
+}
+
+function updatePreview() {
+  const rollNum = totalRolls + 1;
+  const devSec = calcDevSec();
+  const pushLabel = pushStops === 0 ? '' : pushStops > 0 ? `　+${pushStops}段増感` : `　${pushStops}段減感`;
+  const tankLabel = tankCount === 2 ? `　タンク2本` : '';
+  document.getElementById('devTimePreview').textContent =
+    `${rollNum}本目として計算\n現像時間：${fmtSecLong(devSec)}${pushLabel}${tankLabel}`;
+}
+
+// ---- Steps builder ----
+function buildSteps() {
+  const devSec = calcDevSec();
+  const rollNum = totalRolls + 1;
+  const pushLabel = pushStops === 0 ? '標準' : pushStops > 0 ? `+${pushStops}段増感` : `${pushStops}段減感`;
+  const tankLabel = tankCount === 2 ? '（タンク2本処理）' : '';
+
+  return [
+    {
+      phase: "準備",
+      title: "薬液の温度確認",
+      desc: `スービドーで現像液を<strong>38℃</strong>に安定させます。漂白液・定着液も一緒に温めておきましょう。`,
+      tags: [{type:"temp",text:"38℃"},{type:"warn",text:"±0.5℃以内"}],
+      checklist: ["現像液 38℃ ✓","漂白液 温め中","定着液 温め中"],
+      timer: null
+    },
+    {
+      phase: "準備",
+      title: "ダークバッグの準備",
+      desc: `ダークバッグに必要なものを全部入れてからチャックを閉めます。入れ忘れると途中で開けられません。`,
+      tags: [{type:"warn",text:"入れ忘れ注意"}],
+      checklist: [
+        "フィルム",
+        "現像タンク（本体）",
+        "リール",
+        "タンクのフタ",
+        "ハサミ"
+      ],
+      timer: null
+    },
+    {
+      phase: "準備",
+      title: "フィルムをタンクへ",
+      desc: `ダークバッグの中でフィルムをリールに巻き、<strong>MARIXタンク</strong>に入れてキャップを閉めます。${tankCount === 2 ? '<br><br>今回は<strong>2本同時処理</strong>です。' : ''}`,
+      tags: [
+        {type:"warn",text:"完全遮光必須"},
+        {type:"info",text:"ダークバッグ使用"},
+        ...(tankCount === 2 ? [{type:"info",text:"2本同時"}] : [])
+      ],
+      checklist: tankCount === 2
+        ? ["フィルム1本目リールに巻いた","フィルム2本目リールに巻いた","タンクに入れてキャップ締めた"]
+        : ["フィルムをリールに巻いた","タンクに入れた","キャップしっかり締めた"],
+      timer: null
+    },
+    {
+      phase: "準備",
+      title: "前浴（プレウォッシュ）",
+      desc: `38℃のお湯でタンクを温め、現像ムラを防ぎます。<strong>1分間</strong>処理後お湯を捨てます。なしでもOKです。`,
+      tags: [{type:"temp",text:"38℃の水"},{type:"time",text:"1分"},{type:"info",text:"なしでもOK"}],
+      checklist: [],
+      timer: 60,
+      timerLabel: "前浴",
+      agitation: "最初30秒：連続撹拌 → その後は静置"
+    },
+    {
+      phase: "現像",
+      title: `現像液投入`,
+      desc: `現像液（38℃）を投入し、注いだ瞬間からタイマーをスタート。<br><br>設定：<strong>${rollNum}本目・${pushLabel}${tankLabel}</strong><br>現像時間：<strong>${fmtSecLong(devSec)}</strong>`,
+      tags: [
+        {type:"temp",text:"38℃"},
+        {type:"time",text:fmtSec(devSec)},
+        ...(pushStops !== 0 ? [{type:"push",text: pushStops > 0 ? `+${pushStops}段増感` : `${pushStops}段減感`}] : []),
+        {type:"info",text:`${rollNum}本目`}
+      ],
+      checklist: [],
+      timer: devSec,
+      timerLabel: "発色現像",
+      agitation: "投入直後：タンクを机にコンコンと叩きつけて気泡を抜く（バンピング）\n最初30秒：連続撹拌\n以降30秒ごとに4回撹拌（タンクを逆さに4回）"
+    },
+    {
+      phase: "現像",
+      title: "現像液を回収",
+      desc: `現像液を保存ボトルへ回収します。<strong>再利用可能</strong>です。`,
+      tags: [{type:"info",text:"液を回収保存"},{type:"info",text:"再利用可"}],
+      checklist: ["現像液を保存ボトルへ回収","タンク内の液を完全に出した"],
+      timer: null
+    },
+    {
+      phase: "停止",
+      title: "停止液",
+      desc: `クエン酸水（クエン酸15g / 水1L）を投入。<strong>30秒間</strong>連続撹拌して現像を止めます。`,
+      tags: [{type:"time",text:"30秒"},{type:"temp",text:"30〜38度"}],
+      checklist: [],
+      timer: 30,
+      timerLabel: "停止",
+      agitation: "全時間：連続撹拌"
+    },
+    {
+      phase: "停止",
+      title: "水洗（停止後）",
+      desc: `流水でタンク内を<strong>2〜3回</strong>すすいで停止液を洗い流します。`,
+      tags: [{type:"info",text:"2〜3回すすぎ"}],
+      checklist: ["2〜3回すすいだ"],
+      timer: null
+    },
+    {
+      phase: "漂白",
+      title: "漂白液投入",
+      desc: `漂白液（38℃±3℃）を投入します。<strong>8〜10分間</strong>処理。終わったら回収できます。`,
+      tags: [{type:"temp",text:"38℃±3℃"},{type:"time",text:"8〜10分"},{type:"info",text:"液回収可"}],
+      checklist: [],
+      timer: 540,
+      timerLabel: "漂白",
+      agitation: "最初30秒：連続撹拌\n以降1分ごとに10秒撹拌"
+    },
+    {
+      phase: "漂白",
+      title: "水洗（漂白後）",
+      desc: `流水で<strong>2〜3回</strong>すすぎます。漂白の黄色が消えるまでしっかり洗います。`,
+      tags: [{type:"info",text:"黄色が消えるまで"}],
+      checklist: ["2〜3回すすいだ","黄色みが消えた"],
+      timer: null
+    },
+    {
+      phase: "定着",
+      title: "定着液投入",
+      desc: `定着液（38℃±3℃）を投入します。<strong>5分間</strong>処理。液は回収して再利用可能です。`,
+      tags: [{type:"temp",text:"38℃±3℃"},{type:"time",text:"5分"},{type:"info",text:"液回収可"}],
+      checklist: [],
+      timer: 300,
+      timerLabel: "定着",
+      agitation: "最初30秒：連続撹拌\n以降1分ごとに10秒撹拌"
+    },
+    {
+      phase: "水洗",
+      title: "最終水洗",
+      desc: `流水で<strong>5分間</strong>しっかり水洗いします。`,
+      tags: [{type:"time",text:"5分"},{type:"info",text:"流水"}],
+      checklist: [],
+      timer: 300,
+      timerLabel: "最終水洗"
+    },
+    {
+      phase: "水洗",
+      title: "水切り",
+      desc: `水切り剤（ドライウェル等）を数滴入れ、<strong>30秒</strong>軽く撹拌。フィルムを取り出してクリップで吊るします。`,
+      tags: [{type:"time",text:"30秒"},{type:"info",text:"ドライウェル等"}],
+      checklist: [],
+      timer: 30,
+      timerLabel: "水切り"
+    },
+    {
+      phase: "乾燥",
+      title: "乾燥",
+      desc: `フィルムをクリップで吊るして乾燥させます。<strong>浴室に吊るすのが一番</strong>。1〜2時間が目安です。`,
+      tags: [{type:"time",text:"1〜2時間"},{type:"info",text:"浴室推奨"}],
+      checklist: ["フィルムをクリップで吊るした","浴室または埃のない場所に設置"],
+      timer: null
+    }
+  ];
+}
+
+const PHASES = ["準備","現像","停止","漂白","定着","水洗","乾燥"];
+let steps = [];
+let currentStep = 0;
+let timerInterval = null;
+let timerRemaining = 0;
+let timerTotal = 0;
+let timerRunning = false;
+let checkStates = {};
+
+function startGuide() {
+  steps = buildSteps();
+  currentStep = 0;
+  checkStates = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('guideScreen').classList.remove('hidden');
+  renderStep();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToSetup() {
+  clearTimers();
+  document.getElementById('completeScreen').classList.remove('visible');
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 完了後「続けてもう一本」→ 累計を今回分足してセットアップへ
+function continueSession() {
+  clearTimers();
+  totalRolls += tankCount;
+  document.getElementById('totalRollVal').textContent = totalRolls;
+  document.getElementById('completeScreen').classList.remove('visible');
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  updatePreview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderPhaseStrip() {
+  const strip = document.getElementById('phaseStrip');
+  const cur = steps[currentStep].phase;
+  const done = new Set();
+  for (let i = 0; i < currentStep; i++) done.add(steps[i].phase);
+  strip.innerHTML = PHASES.map(p => {
+    let cls = 'phase-dot';
+    if (p === cur) cls += ' active';
+    else if (done.has(p)) cls += ' done';
+    return `<div class="${cls}">${p}</div>`;
+  }).join('');
+}
+
+function renderStep() {
+  if (currentStep >= steps.length) {
+    showComplete(); return;
+  }
+  const step = steps[currentStep];
+  const pct = Math.round((currentStep / steps.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = step.phase;
+  document.getElementById('progressFrac').textContent = `${currentStep + 1} / ${steps.length}`;
+  renderPhaseStrip();
+
+  document.getElementById('stepNumber').textContent = `STEP ${String(currentStep + 1).padStart(2,'0')}`;
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepDesc').innerHTML = step.desc;
+  document.getElementById('stepTags').innerHTML = (step.tags||[]).map(t => `<span class="tag ${t.type}">${t.text}</span>`).join('');
+
+  const cl = document.getElementById('checklist');
+  if (!checkStates[currentStep]) checkStates[currentStep] = {};
+  cl.innerHTML = '';
+  (step.checklist||[]).forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'check-item' + (checkStates[currentStep][i] ? ' checked' : '');
+    div.innerHTML = `<div class="check-box">${checkStates[currentStep][i] ? '✓' : ''}</div><span>${item}</span>`;
+    div.onclick = () => { checkStates[currentStep][i] = !checkStates[currentStep][i]; renderStep(); };
+    cl.appendChild(div);
+  });
+
+  clearTimers();
+  const ta = document.getElementById('timerArea');
+  if (step.timer) {
+    ta.classList.add('visible');
+    timerRemaining = step.timer;
+    timerTotal = step.timer;
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ スタート';
+    document.getElementById('timerStartBtn').className = 'btn btn-primary';
+    document.getElementById('timerLabel').textContent = step.timerLabel || 'タイマー';
+    document.getElementById('timerProgressFill').style.width = '100%';
+    updateTimerDisplay();
+  } else {
+    ta.classList.remove('visible');
+  }
+
+  const ah = document.getElementById('agitationHint');
+  if (step.agitation) {
+    ah.classList.add('visible');
+    ah.innerHTML = '🔄 ' + step.agitation.replace(/\n/g,'<br>');
+  } else {
+    ah.classList.remove('visible');
+  }
+
+  document.getElementById('prevBtn').style.opacity = currentStep === 0 ? '0.3' : '1';
+  document.getElementById('prevBtn').disabled = currentStep === 0;
+  const nb = document.getElementById('nextBtn');
+  if (currentStep === steps.length - 1) {
+    nb.textContent = '現像完了 ✓'; nb.className = 'btn btn-success';
+  } else {
+    nb.textContent = '次のステップ →'; nb.className = 'btn btn-primary';
+  }
+}
+
+function showComplete() {
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('completeScreen').classList.add('visible');
+
+  const rollNum = totalRolls + 1;
+  const devSec = calcDevSec();
+  const pushLabel = pushStops === 0 ? '標準' : pushStops > 0 ? `+${pushStops}段増感` : `${pushStops}段減感`;
+  const nextTotal = totalRolls + tankCount;
+  const nextDevSec = (() => {
+    const nextRollNum = nextTotal + 1;
+    const s = Math.round(BASE_SEC * Math.pow(1.03, nextRollNum - 1));
+    return Math.round(s * (PUSH_MULT[String(pushStops)] || 1.0));
+  })();
+
+  document.getElementById('completeStats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">現像時間</span><span class="stat-val">${fmtSecLong(devSec)}</span></div>
+    <div class="stat-row"><span class="stat-label">本数（今回）</span><span class="stat-val">${rollNum}本目${tankCount === 2 ? '〜' + (rollNum+1) + '本目' : ''}</span></div>
+    <div class="stat-row"><span class="stat-label">増感設定</span><span class="stat-val">${pushLabel}</span></div>
+    <div class="stat-row"><span class="stat-label">液の累計</span><span class="stat-val">${nextTotal}本処理済み</span></div>
+  `;
+
+  document.getElementById('nextSessionBox').innerHTML =
+    `<strong>次回の現像時間（参考）</strong><br>${nextTotal + 1}本目として ${fmtSecLong(nextDevSec)}${pushStops !== 0 ? `（${pushLabel}）` : ''}`;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerRemaining / 60);
+  const s = timerRemaining % 60;
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  el.className = 'timer-display';
+  if (timerRunning) el.classList.add(timerRemaining <= 10 ? 'warning' : 'running');
+  document.getElementById('timerProgressFill').style.width = ((timerRemaining / timerTotal) * 100) + '%';
+}
+
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBeep(freq, duration, volume) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq; osc.type = 'sine';
+    gain.gain.setValueAtTime(volume||0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+function playFinishSound() {
+  try {
+    const ctx = getAudioCtx();
+    [0, 0.3, 0.6].forEach(offset => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.6, ctx.currentTime + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.25);
+      osc.start(ctx.currentTime + offset); osc.stop(ctx.currentTime + offset + 0.25);
+    });
+  } catch(e) {}
+}
+
+function startTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ 再開';
+    document.getElementById('timerStartBtn').className = 'btn btn-primary';
+    updateTimerDisplay(); return;
+  }
+  try { getAudioCtx(); } catch(e) {}
+  timerRunning = true;
+  document.getElementById('timerStartBtn').textContent = '⏸ 一時停止';
+  document.getElementById('timerStartBtn').className = 'btn btn-outline';
+  timerInterval = setInterval(() => {
+    timerRemaining--;
+    updateTimerDisplay();
+    if (timerRemaining > 0 && timerRemaining <= 10) {
+      playBeep(440, 0.1, 0.3);
+    }
+    if (timerRemaining <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timerDisplay').textContent = '終了！';
+      document.getElementById('timerDisplay').className = 'timer-display';
+      document.getElementById('timerStartBtn').textContent = '✓ 完了';
+      document.getElementById('timerStartBtn').className = 'btn btn-success';
+      playFinishSound();
+      if (navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerRemaining = steps[currentStep]?.timer || 0;
+  document.getElementById('timerStartBtn').textContent = '▶ スタート';
+  document.getElementById('timerStartBtn').className = 'btn btn-primary';
+  updateTimerDisplay();
+}
+
+function clearTimers() { clearInterval(timerInterval); timerRunning = false; }
+
+function nextStep() { clearTimers(); currentStep++; renderStep(); window.scrollTo({top:0,behavior:'smooth'}); }
+function prevStep() { if (currentStep===0) return; clearTimers(); currentStep--; renderStep(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+updatePreview();
+</script>
+</body>
+</html>
