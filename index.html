@@ -600,12 +600,6 @@ function updateAgitStatus60() {
     msgEl.className='agit-message';
     cdEl.textContent=''; nextEl.textContent=''; return;
   }
-  if(elapsed===0) {
-    phaseEl.textContent='0秒 — バンピング';
-    msgEl.textContent='🔨 コンコン叩いて気泡を抜く';
-    msgEl.className='agit-message active';
-    cdEl.textContent=''; nextEl.textContent='→ すぐ連続撹拌を開始'; return;
-  }
   if(elapsed < CONTINUOUS_END) {
     const rem = CONTINUOUS_END - elapsed;
     phaseEl.textContent=`${elapsed}秒経過 — 連続撹拌中`;
@@ -785,8 +779,7 @@ function startTimer(){
   }
   if(step.agitationGuide60){
     agitState='running'; agitElapsed=0;
-    speak('バンピングしてください。');
-    setTimeout(()=>speak('連続撹拌を開始してください。'), 3000);
+    speak('連続撹拌を開始してください。');
     updateAgitStatus60();
   }
 
