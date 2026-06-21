@@ -70,7 +70,7 @@
   function isoEVCorrection(iso) { return Math.log2(iso / 100); }
 
   function targetEV(sceneKey, mode, iso) {
-    return SCENES[sceneKey].ev[mode] - isoEVCorrection(iso);
+    return SCENES[sceneKey].ev[mode] + isoEVCorrection(iso);
   }
 
   function bestCombinations(sceneKey, mode, iso) {
@@ -97,7 +97,7 @@
     const accent = mode === "sunny16" ? C.accent16 : C.accent8;
     const sceneData = SCENES[scene];
     const evBase = targetEV(scene, mode, iso);
-    const evFromS16 = evBase - (15 - isoEVCorrection(iso));
+    const evFromS16 = evBase - (15 + isoEVCorrection(iso));
 
     const btn = (onClick, active, col, children, extra = {}) =>
       e("button", {
