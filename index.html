@@ -1,263 +1,883 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Exposure Field Guide</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0f0f0f; font-family: 'Courier New', monospace; }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-    input[type=number] { -moz-appearance: textfield; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARIX C-41 現像ガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#0d0d0d; --surface:#1a1a1a; --border:#2e2e2e;
+    --accent:#e8a020; --accent2:#c04020; --text:#e8e0d4;
+    --muted:#888; --success:#4caf82; --danger:#e05050; --info:#5090e0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:80px;}
+  header{width:100%;padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:12px;}
+  header h1{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;}
+  header span{font-size:11px;color:var(--muted);}
+
+  /* Setup */
+  .setup-screen{width:100%;padding:24px;display:flex;flex-direction:column;gap:20px;}
+  .setup-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+  .setup-subtitle{font-size:12px;color:var(--muted);}
+  .setup-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+  .setup-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.1em;color:var(--accent);margin-bottom:12px;text-transform:uppercase;}
+  .btn-group{display:flex;flex-wrap:wrap;gap:8px;}
+  .sel-btn{padding:10px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+  .sel-btn:active{transform:scale(.97);}
+  .sel-btn.selected{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700;}
+  .sel-btn.push-selected{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700;}
+  .counter-row{display:flex;align-items:center;gap:12px;margin-top:4px;}
+  .counter-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+  .counter-btn:active{transform:scale(.95);background:var(--border);}
+  .counter-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--accent);min-width:40px;text-align:center;}
+  .counter-label{font-size:12px;color:var(--muted);}
+  .saved-badge{font-size:10px;color:var(--success);font-family:'DM Mono',monospace;margin-top:6px;}
+  .dev-time-preview{margin-top:14px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;color:var(--success);letter-spacing:.05em;text-align:center;line-height:1.6;white-space:pre-line;}
+  .strict-note{margin-top:10px;padding:10px 14px;background:rgba(80,144,224,.08);border:1px solid rgba(80,144,224,.25);border-radius:8px;font-size:11px;color:#88aadd;line-height:1.6;}
+  .setup-start-btn{width:100%;padding:18px;background:var(--accent);color:#000;border:none;border-radius:12px;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;}
+  .setup-start-btn:active{transform:scale(.98);}
+
+  /* Progress */
+  .progress-wrap{width:100%;padding:0 24px;margin-top:20px;}
+  .progress-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .5s ease;}
+  .progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;}
+
+  /* Phase strip */
+  .phase-strip{width:100%;padding:16px 24px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+  .phase-strip::-webkit-scrollbar{display:none;}
+  .phase-dot{flex-shrink:0;padding:4px 10px;border-radius:20px;font-size:10px;font-family:'DM Mono',monospace;border:1px solid var(--border);color:var(--muted);transition:all .3s;white-space:nowrap;}
+  .phase-dot.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:500;}
+  .phase-dot.done{background:var(--border);color:var(--text);}
+
+  /* Card */
+  .card{width:calc(100% - 48px);margin:20px 24px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;}
+  .step-number{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;margin-bottom:8px;}
+  .step-title{font-size:22px;font-weight:700;line-height:1.3;margin-bottom:12px;}
+  .step-desc{font-size:14px;color:#bbb;line-height:1.7;font-weight:300;}
+  .step-desc strong{color:var(--accent);font-weight:700;}
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .tag{padding:4px 10px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;}
+  .tag.temp{background:rgba(232,160,32,.15);color:var(--accent);border:1px solid rgba(232,160,32,.3);}
+  .tag.time{background:rgba(76,175,130,.15);color:var(--success);border:1px solid rgba(76,175,130,.3);}
+  .tag.warn{background:rgba(224,80,80,.15);color:var(--danger);border:1px solid rgba(224,80,80,.3);}
+  .tag.info{background:rgba(232,224,212,.1);color:var(--text);border:1px solid var(--border);}
+  .tag.push{background:rgba(224,80,80,.15);color:var(--danger);border:1px solid rgba(224,80,80,.3);}
+
+  /* Checklist */
+  .checklist{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+  .check-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;font-size:13px;user-select:none;}
+  .check-item:active{transform:scale(.98);}
+  .check-item.checked{background:rgba(76,175,130,.08);border-color:rgba(76,175,130,.3);color:var(--muted);text-decoration:line-through;}
+  .check-box{width:20px;height:20px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .check-item.checked .check-box{background:var(--success);border-color:var(--success);color:#000;}
+
+  /* Agitation hint (static) */
+  .agitation-hint{width:calc(100% - 48px);margin:10px 24px 0;padding:12px 16px;background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.2);border-radius:8px;font-size:12px;color:var(--accent);display:none;font-family:'DM Mono',monospace;line-height:1.6;}
+  .agitation-hint.visible{display:block;}
+
+  /* Timer */
+  .timer-area{width:calc(100% - 48px);margin:12px 24px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:none;}
+  .timer-area.visible{display:block;}
+  .timer-display{font-family:'DM Mono',monospace;font-size:52px;font-weight:500;text-align:center;color:var(--accent);letter-spacing:.05em;}
+  .timer-display.running{color:var(--success);}
+  .timer-display.warning{color:var(--danger);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .timer-label{text-align:center;font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;letter-spacing:.1em;}
+  .timer-progress{height:3px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;}
+  .timer-progress-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--accent));border-radius:2px;transition:width 1s linear;}
+  .timer-btns{display:flex;gap:8px;margin-top:14px;}
+
+  /* Agitation status box */
+  .agit-status{width:calc(100% - 48px);margin:10px 24px 0;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:none;}
+  .agit-status.visible{display:block;}
+  .agit-phase{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;}
+  .agit-message{font-size:16px;font-weight:700;color:var(--accent);margin-bottom:10px;}
+  .agit-message.active{color:var(--danger);animation:pulse 1s infinite;}
+  .agit-message.done{color:var(--success);}
+  .agit-countdown{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;text-align:center;color:var(--text);margin-bottom:10px;}
+  .agit-next{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+  /* Buttons */
+  .btn{flex:1;padding:14px;border:none;border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-secondary{background:var(--border);color:var(--text);}
+  .btn-success{background:var(--success);color:#000;}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .action-area{width:calc(100% - 48px);margin:16px 24px 0;display:flex;gap:10px;}
+
+  /* Complete */
+  .complete-screen{display:none;flex-direction:column;align-items:center;padding:48px 24px;text-align:center;}
+  .complete-screen.visible{display:flex;}
+  .complete-icon{font-size:56px;margin-bottom:16px;}
+  .complete-title{font-size:26px;font-weight:700;margin-bottom:16px;}
+  .complete-stats{width:100%;max-width:320px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:left;}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-label{color:var(--muted);}
+  .stat-val{font-family:'DM Mono',monospace;color:var(--accent);font-size:13px;}
+  .next-session-box{width:100%;max-width:320px;margin-top:14px;padding:14px 18px;background:rgba(80,144,224,.08);border:1px solid rgba(80,144,224,.25);border-radius:12px;font-size:12px;color:#88aadd;line-height:1.7;text-align:left;}
+  .next-session-box strong{color:#aac8ff;}
+  .hidden{display:none!important;}
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script>
-  const { useState, useMemo } = React;
-  const e = React.createElement;
+<header>
+  <h1>MARIX C-41</h1>
+  <span>カラーネガ現像ガイド</span>
+</header>
 
-  // ── データ ──────────────────────────────────────────────────
-  const SHUTTER_SPEEDS = [
-    { label: "1/4000", value: 1/4000 }, { label: "1/3200", value: 1/3200 },
-    { label: "1/2500", value: 1/2500 }, { label: "1/2000", value: 1/2000 },
-    { label: "1/1600", value: 1/1600 }, { label: "1/1250", value: 1/1250 },
-    { label: "1/1000", value: 1/1000 }, { label: "1/800",  value: 1/800  },
-    { label: "1/640",  value: 1/640  }, { label: "1/500",  value: 1/500  },
-    { label: "1/400",  value: 1/400  }, { label: "1/320",  value: 1/320  },
-    { label: "1/250",  value: 1/250  }, { label: "1/200",  value: 1/200  },
-    { label: "1/160",  value: 1/160  }, { label: "1/125",  value: 1/125  },
-    { label: "1/100",  value: 1/100  }, { label: "1/80",   value: 1/80   },
-    { label: "1/60",   value: 1/60   }, { label: "1/50",   value: 1/50   },
-    { label: "1/40",   value: 1/40   }, { label: "1/30",   value: 1/30   },
-    { label: "1/25",   value: 1/25   }, { label: "1/20",   value: 1/20   },
-    { label: "1/15",   value: 1/15   }, { label: "1/13",   value: 1/13   },
-    { label: "1/10",   value: 1/10   }, { label: "1/8",    value: 1/8    },
-    { label: "1/6",    value: 1/6    }, { label: "1/5",    value: 1/5    },
-    { label: "1/4",    value: 1/4    }, { label: "1/3",    value: 1/3    },
-    { label: "1/2",    value: 1/2    }, { label: "1s",     value: 1      },
+<!-- Setup -->
+<div class="setup-screen" id="setupScreen">
+  <div>
+    <div class="setup-title">現像の設定</div>
+    <div class="setup-subtitle">液の使用回数・今回の本数・増感を設定してください</div>
+  </div>
+
+  <div class="setup-section">
+    <div class="setup-label">液の使用回数（これまで）</div>
+    <div class="counter-row">
+      <button class="counter-btn" onclick="changeTotal(-1)">−</button>
+      <div class="counter-val" id="totalRollVal">0</div>
+      <div class="counter-label">回使用済み</div>
+      <button class="counter-btn" onclick="changeTotal(1)">＋</button>
+    </div>
+    <div class="saved-badge" id="savedBadge"></div>
+    <button onclick="resetLiquid()" style="margin-top:10px;padding:8px 14px;border-radius:8px;border:1px solid var(--danger);background:rgba(224,80,80,.1);color:var(--danger);font-family:'Noto Sans JP',sans-serif;font-size:12px;cursor:pointer;">🔄 現像液を新しくした</button>
+    <div class="strict-note" style="margin-top:10px;">
+      💡 現像ごとに時間3%延長（タンクに何本入れても1回扱い）<br>
+      1回目 3:30 → 2回目 3:37 → 3回目 3:44…
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="setup-label">今回タンクに入れる本数</div>
+    <div class="btn-group" id="tankGroup">
+      <button class="sel-btn selected" onclick="selectTank(this,1)">1本</button>
+      <button class="sel-btn" onclick="selectTank(this,2)">2本</button>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="setup-label">増感 / 減感</div>
+    <div class="btn-group" id="pushGroup">
+      <button class="sel-btn selected" onclick="selectPush(this,0)">±0（標準）</button>
+      <button class="sel-btn" onclick="selectPush(this,1)">+1段増感</button>
+      <button class="sel-btn" onclick="selectPush(this,2)">+2段増感</button>
+      <button class="sel-btn" onclick="selectPush(this,3)">+3段増感</button>
+      <button class="sel-btn" onclick="selectPush(this,-1)">−1段減感</button>
+    </div>
+    <div class="dev-time-preview" id="devTimePreview">-</div>
+  </div>
+
+  <button class="setup-start-btn" onclick="startGuide()">現像を開始する →</button>
+</div>
+
+<!-- Guide -->
+<div id="guideScreen" class="hidden" style="width:100%">
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label"><span id="progressText">-</span><span id="progressFrac">0/0</span></div>
+  </div>
+  <div class="phase-strip" id="phaseStrip"></div>
+  <div class="card">
+    <div class="step-number" id="stepNumber"></div>
+    <div class="step-title" id="stepTitle"></div>
+    <div class="step-desc" id="stepDesc"></div>
+    <div class="tags" id="stepTags"></div>
+    <div class="checklist" id="checklist"></div>
+  </div>
+  <div class="agitation-hint" id="agitationHint"></div>
+
+  <!-- 通常タイマー -->
+  <div class="timer-area" id="timerArea">
+    <div class="timer-display" id="timerDisplay">0:00</div>
+    <div class="timer-label" id="timerLabel">タイマー</div>
+    <div class="timer-progress"><div class="timer-progress-fill" id="timerProgressFill" style="width:100%"></div></div>
+    <div class="timer-btns">
+      <button class="btn btn-primary" id="timerStartBtn" onclick="startTimer()">▶ スタート</button>
+      <button class="btn btn-outline" onclick="resetTimer()">リセット</button>
+    </div>
+    <div style="margin-top:10px;text-align:right;">
+      <button id="speechToggle" onclick="toggleSpeech()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;">🔊 音声ON</button>
+    </div>
+  </div>
+
+  <!-- 撹拌ガイド（現像ステップ専用） -->
+  <div class="agit-status" id="agitStatus">
+    <div class="agit-phase" id="agitPhase">-</div>
+    <div class="agit-message" id="agitMessage">-</div>
+    <div class="agit-countdown" id="agitCountdown"></div>
+    <div class="agit-next" id="agitNext"></div>
+  </div>
+
+  <div class="action-area">
+    <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()">← 前へ</button>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">次のステップ →</button>
+  </div>
+</div>
+
+<!-- Complete -->
+<div class="complete-screen" id="completeScreen">
+  <div class="complete-icon">🎞️</div>
+  <div class="complete-title">現像完了！</div>
+  <div class="complete-stats" id="completeStats"></div>
+  <div class="next-session-box" id="nextSessionBox"></div>
+  <div style="margin-top:20px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px">
+    <button class="btn btn-primary" onclick="continueSession()" style="width:100%;padding:16px;">続けてもう一本現像する</button>
+    <button class="btn btn-outline" onclick="backToSetup()" style="width:100%;padding:14px;font-size:13px;">最初からやり直す</button>
+  </div>
+</div>
+
+<script>
+// ---- localStorage ----
+const LS_KEY = 'marix_c41_uses';
+function loadUses() {
+  try { return parseInt(localStorage.getItem(LS_KEY)||'0',10)||0; } catch(e){return 0;}
+}
+function saveUses(n) {
+  try { localStorage.setItem(LS_KEY, String(n)); } catch(e){}
+}
+
+// ---- State ----
+let totalUses = loadUses(); // 現像液の使用回数（今回の前まで）
+let tankCount = 1;
+let pushStops = 0;
+
+const PUSH_MULT = {'-1':0.8,'0':1.0,'1':1.3,'2':1.75,'3':2.5};
+const BASE_SEC = 210;
+
+function calcDevSec() {
+  const useNum = totalUses + 1;
+  const strict = Math.round(BASE_SEC * Math.pow(1.03, useNum - 1));
+  return Math.round(strict * (PUSH_MULT[String(pushStops)]||1.0));
+}
+
+function fmtSec(sec){ const m=Math.floor(sec/60),s=sec%60; return `${m}:${String(s).padStart(2,'0')}`; }
+function fmtSecLong(sec){ const m=Math.floor(sec/60),s=sec%60; return s>0?`${m}分${s}秒（${sec}秒）`:`${m}分（${sec}秒）`; }
+
+function initUI() {
+  document.getElementById('totalRollVal').textContent = totalUses;
+  const badge = document.getElementById('savedBadge');
+  badge.textContent = totalUses > 0 ? `💾 前回の記録：${totalUses}回使用済み` : '';
+  updatePreview();
+}
+
+function changeTotal(delta) {
+  totalUses = Math.max(0, totalUses + delta);
+  document.getElementById('totalRollVal').textContent = totalUses;
+  document.getElementById('savedBadge').textContent = '';
+  updatePreview();
+}
+
+function selectTank(btn, val) {
+  tankCount = val;
+  document.querySelectorAll('#tankGroup .sel-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updatePreview();
+}
+
+function selectPush(btn, val) {
+  pushStops = val;
+  document.querySelectorAll('#pushGroup .sel-btn').forEach(b=>b.classList.remove('selected','push-selected'));
+  if(val>0) btn.classList.add('push-selected'); else btn.classList.add('selected');
+  updatePreview();
+}
+
+function toggleSpeech() {
+  speechEnabled = !speechEnabled;
+  document.getElementById('speechToggle').textContent = speechEnabled ? '🔊 音声ON' : '🔇 音声OFF';
+}
+
+function resetLiquid() {
+  if(confirm('現像液をリセットして使用回数を0に戻しますか？')) {
+    totalUses = 0;
+    saveUses(0);
+    document.getElementById('totalRollVal').textContent = 0;
+    document.getElementById('savedBadge').textContent = '✅ リセットしました';
+    updatePreview();
+  }
+}
+
+// ---- 音声アナウンス ----
+let speechEnabled = true;
+function speak(text) {
+  if(!speechEnabled) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    u.rate = 1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+function updatePreview() {
+  const useNum = totalUses + 1;
+  const devSec = calcDevSec();
+  const pushLabel = pushStops===0?'':`  ${pushStops>0?'+':''}${pushStops}段${pushStops>0?'増感':'減感'}`;
+  const tankLabel = tankCount===2?'  タンク2本':'';
+  document.getElementById('devTimePreview').textContent =
+    `${useNum}回目として計算\n現像時間：${fmtSecLong(devSec)}${pushLabel}${tankLabel}`;
+}
+
+// ---- Steps ----
+function buildSteps() {
+  const devSec = calcDevSec();
+  const useNum = totalUses + 1;
+  const pushLabel = pushStops===0?'標準':pushStops>0?`+${pushStops}段増感`:`${pushStops}段減感`;
+  const tankLabel = tankCount===2?'（タンク2本処理）':'';
+
+  return [
+    {
+      phase:"準備", title:"薬液の温度確認",
+      desc:`スービドーで現像液を<strong>38℃</strong>に安定させます。漂白液・定着液も一緒に温めておきましょう。`,
+      tags:[{type:"temp",text:"38℃"},{type:"warn",text:"±0.5℃以内"}],
+      checklist:["現像液 38℃ ✓","漂白液 温め中","定着液 温め中"],
+      timer:null
+    },
+    {
+      phase:"準備", title:"ダークバッグの準備",
+      desc:`ダークバッグに必要なものを全部入れてからチャックを閉めます。入れ忘れると途中で開けられません。`,
+      tags:[{type:"warn",text:"入れ忘れ注意"}],
+      checklist:["フィルム","現像タンク（本体）","リール","タンクのフタ","ハサミ"],
+      timer:null
+    },
+    {
+      phase:"準備", title:"フィルムをタンクへ",
+      desc:`ダークバッグの中でフィルムをリールに巻き、<strong>MARIXタンク</strong>に入れてキャップを閉めます。${tankCount===2?'<br><br>今回は<strong>2本同時処理</strong>です。':''}`,
+      tags:[{type:"warn",text:"完全遮光必須"},{type:"info",text:"ダークバッグ使用"},...(tankCount===2?[{type:"info",text:"2本同時"}]:[])],
+      checklist:tankCount===2
+        ?["フィルム1本目リールに巻いた","フィルム2本目リールに巻いた","タンクに入れてキャップ締めた"]
+        :["フィルムをリールに巻いた","タンクに入れた","キャップしっかり締めた"],
+      timer:null
+    },
+    {
+      phase:"準備", title:"前浴（プレウォッシュ）",
+      desc:`38℃のお湯でタンクを温め、現像ムラを防ぎます。<strong>1分間</strong>処理後お湯を捨てます。なしでもOKです。`,
+      tags:[{type:"temp",text:"38℃の水"},{type:"time",text:"1分"},{type:"info",text:"なしでもOK"}],
+      checklist:[], timer:60, timerLabel:"前浴",
+      agitation:"最初30秒：連続撹拌 → その後は静置"
+    },
+    {
+      phase:"現像", title:"現像液投入",
+      desc:`現像液（38℃）を注いだ瞬間タイマーが自動でスタートします。バンピングしてから撹拌を開始してください。<br><br>設定：<strong>${useNum}回目・${pushLabel}${tankLabel}</strong><br>現像時間：<strong>${fmtSecLong(devSec)}</strong>`,
+      tags:[{type:"temp",text:"38℃"},{type:"time",text:fmtSec(devSec)},...(pushStops!==0?[{type:"push",text:pushStops>0?`+${pushStops}段増感`:`${pushStops}段減感`}]:[]),{type:"info",text:`${useNum}回目`}],
+      checklist:[], timer:devSec, timerLabel:"発色現像",
+      agitationGuide: true  // 撹拌ガイドを使う
+    },
+    {
+      phase:"現像", title:"現像液を回収",
+      desc:`現像液を保存ボトルへ回収します。<strong>再利用可能</strong>です。`,
+      tags:[{type:"info",text:"液を回収保存"},{type:"info",text:"再利用可"}],
+      checklist:["現像液を保存ボトルへ回収","タンク内の液を完全に出した"],
+      timer:null
+    },
+    {
+      phase:"停止", title:"停止液",
+      desc:`クエン酸水（クエン酸15g / 水1L）を投入。<strong>30秒間</strong>連続撹拌して現像を止めます。`,
+      tags:[{type:"time",text:"30秒"},{type:"temp",text:"30〜38度"}],
+      checklist:[], timer:30, timerLabel:"停止",
+      agitation:"全時間：連続撹拌"
+    },
+    {
+      phase:"停止", title:"水洗（停止後）",
+      desc:`流水でタンク内を<strong>2〜3回</strong>すすいで停止液を洗い流します。`,
+      tags:[{type:"info",text:"2〜3回すすぎ"}],
+      checklist:["2〜3回すすいだ"], timer:null
+    },
+    {
+      phase:"漂白", title:"漂白液投入",
+      desc:`漂白液（38℃±3℃）を投入します。<strong>8〜10分間</strong>処理。`,
+      tags:[{type:"temp",text:"38℃±3℃"},{type:"time",text:"8〜10分"},{type:"info",text:"液回収可"}],
+      checklist:[], timer:540, timerLabel:"漂白",
+      agitationGuide60: true
+    },
+    {
+      phase:"漂白", title:"漂白液を回収",
+      desc:`漂白液を保存ボトルへ回収します。<strong>再利用可能</strong>です。`,
+      tags:[{type:"info",text:"液を回収保存"},{type:"info",text:"再利用可"}],
+      checklist:["漂白液を保存ボトルへ回収","タンク内の液を完全に出した"], timer:null
+    },
+    {
+      phase:"漂白", title:"水洗（漂白後）",
+      desc:`流水で<strong>2〜3回</strong>すすぎます。漂白の黄色が消えるまでしっかり洗います。`,
+      tags:[{type:"info",text:"黄色が消えるまで"}],
+      checklist:["2〜3回すすいだ","黄色みが消えた"], timer:null
+    },
+    {
+      phase:"定着", title:"定着液投入",
+      desc:`定着液（38℃±3℃）を投入します。<strong>5分間</strong>処理。`,
+      tags:[{type:"temp",text:"38℃±3℃"},{type:"time",text:"5分"},{type:"info",text:"液回収可"}],
+      checklist:[], timer:300, timerLabel:"定着",
+      agitationGuide60: true
+    },
+    {
+      phase:"定着", title:"定着液を回収",
+      desc:`定着液を保存ボトルへ回収します。<strong>再利用可能</strong>です。`,
+      tags:[{type:"info",text:"液を回収保存"},{type:"info",text:"再利用可"}],
+      checklist:["定着液を保存ボトルへ回収","タンク内の液を完全に出した"], timer:null
+    },
+    {
+      phase:"水洗", title:"最終水洗",
+      desc:`流水で<strong>5分間</strong>しっかり水洗いします。`,
+      tags:[{type:"time",text:"5分"},{type:"info",text:"流水"}],
+      checklist:[], timer:300, timerLabel:"最終水洗"
+    },
+    {
+      phase:"水洗", title:"水切り",
+      desc:`水切り剤（ドライウェル等）を数滴入れ、<strong>30秒</strong>軽く撹拌。フィルムを取り出してクリップで吊るします。`,
+      tags:[{type:"time",text:"30秒"},{type:"info",text:"ドライウェル等"}],
+      checklist:[], timer:30, timerLabel:"水切り"
+    },
+    {
+      phase:"乾燥", title:"乾燥",
+      desc:`フィルムをクリップで吊るして乾燥させます。<strong>浴室に吊るすのが一番</strong>。1〜2時間が目安です。`,
+      tags:[{type:"time",text:"1〜2時間"},{type:"info",text:"浴室推奨"}],
+      checklist:["フィルムをクリップで吊るした","浴室または埃のない場所に設置"],
+      timer:null
+    }
   ];
+}
 
-  const SCENES = {
-    sunny_clear:      { icon: "☀️", label: "快晴", sub: "ハイライト基準", ev: { sunny16: 15, otaky8: 14 }, apertures: { sunny16: [8, 11, 16, 22], otaky8: [5.6, 8, 11, 16] }, highlight: 1 },
-    sunny_bright:     { icon: "☀️", label: "快晴", sub: "ネガ向け明るめ",  ev: { sunny16: 14, otaky8: 14 }, apertures: { sunny16: [8, 11, 16, 22], otaky8: [5.6, 8, 11, 16] }, highlight: 1 },
-    sunny_shadow:     { icon: "🌓", label: "快晴", sub: "影を出したい",    ev: { sunny16: 13, otaky8: 13 }, apertures: { sunny16: [5.6, 8, 11, 16], otaky8: [4, 5.6, 8, 11] }, highlight: 1 },
-    cloudy:           { icon: "🌤", label: "曇り", sub: "薄曇り",          ev: { sunny16: 13, otaky8: 13 }, apertures: { sunny16: [5.6, 8, 11, 16], otaky8: [5.6, 8, 11, 16] }, highlight: 1 },
-    overcast:         { icon: "☁️", label: "曇り", sub: "どんより曇り",    ev: { sunny16: 12, otaky8: 12 }, apertures: { sunny16: [4, 5.6, 8, 11],  otaky8: [4, 5.6, 8, 11]  }, highlight: 1 },
-    golden_highlight: { icon: "🌅", label: "朝夕", sub: "日が当たる面",    ev: { sunny16: 13, otaky8: 13 }, apertures: { sunny16: [5.6, 8, 11, 16], otaky8: [5.6, 8, 11, 16] }, highlight: 1 },
-    golden_shadow:    { icon: "🌆", label: "朝夕", sub: "影を出したい",    ev: { sunny16: 11, otaky8: 11 }, apertures: { sunny16: [2.8, 4, 5.6, 8],  otaky8: [2.8, 4, 5.6, 8] }, highlight: 1 },
-    night:            { icon: "🌃", label: "夜",   sub: "街灯・ネオン",    ev: { sunny16: 8,  otaky8: 8  }, apertures: { sunny16: [1.4, 1.8, 2.0, 2.8], otaky8: [1.4, 1.8, 2.0, 2.8] }, highlight: 0 },
-  };
+const PHASES=["準備","現像","停止","漂白","定着","水洗","乾燥"];
+let steps=[], currentStep=0;
+let timerInterval=null, timerRemaining=0, timerTotal=0, timerRunning=false;
+let checkStates={};
 
-  const TIME_GROUPS = [
-    { label: "快晴", keys: ["sunny_clear", "sunny_bright", "sunny_shadow"] },
-    { label: "曇り", keys: ["cloudy", "overcast"] },
-    { label: "朝夕", keys: ["golden_highlight", "golden_shadow"] },
-    { label: "夜",   keys: ["night"] },
-  ];
+// ---- 撹拌ガイド state ----
+// フェーズ: 'idle' | 'bump' | 'continuous' | 'interval' | 'done'
+let agitState = 'idle';
+let agitElapsed = 0;  // 現像開始からの秒数
+let agitIntervalSec = 30; // 撹拌インターバル（秒）
+let agitNextAt = 0;  // 次の撹拌タイミング（elapsed秒）
+let agitLapStart = 0; // 直前の撹拌開始elapsed
 
-  const C = {
-    bg: "#0f0f0f", surface: "#171717", border: "#252525", borderHi: "#333",
-    text: "#ddd8d0", textDim: "#777", textMute: "#444",
-    accent16: "#c8b88a", accent8: "#7eb8a4",
-  };
-  const mono = "'Courier New', monospace";
+function startGuide() {
+  steps = buildSteps();
+  currentStep = 0;
+  checkStates = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('guideScreen').classList.remove('hidden');
+  renderStep();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
-  // ── 計算 ────────────────────────────────────────────────────
-  function isoEVCorrection(iso) { return Math.log2(iso / 100); }
+function backToSetup() {
+  clearTimers();
+  document.getElementById('completeScreen').classList.remove('visible');
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
-  function targetEV(sceneKey, mode, iso) {
-    return SCENES[sceneKey].ev[mode] + isoEVCorrection(iso);
+function continueSession() {
+  clearTimers();
+  totalUses += 1; // 現像液の使用回数を1増やす
+  saveUses(totalUses);
+  document.getElementById('totalRollVal').textContent = totalUses;
+  document.getElementById('savedBadge').textContent = `💾 保存済み：${totalUses}回使用済み`;
+  document.getElementById('completeScreen').classList.remove('visible');
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  updatePreview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderPhaseStrip() {
+  const strip = document.getElementById('phaseStrip');
+  const cur = steps[currentStep].phase;
+  const done = new Set();
+  for(let i=0;i<currentStep;i++) done.add(steps[i].phase);
+  strip.innerHTML = PHASES.map(p=>{
+    let cls='phase-dot';
+    if(p===cur) cls+=' active'; else if(done.has(p)) cls+=' done';
+    return `<div class="${cls}">${p}</div>`;
+  }).join('');
+}
+
+function renderStep() {
+  if(currentStep>=steps.length){ showComplete(); return; }
+  const step = steps[currentStep];
+  const pct = Math.round((currentStep/steps.length)*100);
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=step.phase;
+  document.getElementById('progressFrac').textContent=`${currentStep+1} / ${steps.length}`;
+  renderPhaseStrip();
+  document.getElementById('stepNumber').textContent=`STEP ${String(currentStep+1).padStart(2,'0')}`;
+  document.getElementById('stepTitle').textContent=step.title;
+  document.getElementById('stepDesc').innerHTML=step.desc;
+  document.getElementById('stepTags').innerHTML=(step.tags||[]).map(t=>`<span class="tag ${t.type}">${t.text}</span>`).join('');
+
+  const cl=document.getElementById('checklist');
+  if(!checkStates[currentStep]) checkStates[currentStep]={};
+  cl.innerHTML='';
+  (step.checklist||[]).forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='check-item'+(checkStates[currentStep][i]?' checked':'');
+    div.innerHTML=`<div class="check-box">${checkStates[currentStep][i]?'✓':''}</div><span>${item}</span>`;
+    div.onclick=()=>{checkStates[currentStep][i]=!checkStates[currentStep][i];renderStep();};
+    cl.appendChild(div);
+  });
+
+  clearTimers();
+
+  const ta=document.getElementById('timerArea');
+  const as=document.getElementById('agitStatus');
+  const ah=document.getElementById('agitationHint');
+
+  if(step.agitationGuide) {
+    // 現像ステップ：撹拌ガイドモード（30秒連続+30秒インターバル）
+    ta.classList.add('visible');
+    as.classList.add('visible');
+    ah.classList.remove('visible');
+    timerRemaining=step.timer; timerTotal=step.timer; timerRunning=false;
+    document.getElementById('timerStartBtn').textContent='▶ 液を注いだ → スタート';
+    document.getElementById('timerStartBtn').className='btn btn-primary';
+    document.getElementById('timerLabel').textContent=step.timerLabel||'タイマー';
+    document.getElementById('timerProgressFill').style.width='100%';
+    updateTimerDisplay();
+    agitState='idle'; agitElapsed=0;
+    updateAgitStatus();
+  } else if(step.agitationGuide60) {
+    // 漂白・定着ステップ：撹拌ガイドモード（30秒連続+60秒インターバル）
+    ta.classList.add('visible');
+    as.classList.add('visible');
+    ah.classList.remove('visible');
+    timerRemaining=step.timer; timerTotal=step.timer; timerRunning=false;
+    document.getElementById('timerStartBtn').textContent='▶ 液を注いだ → スタート';
+    document.getElementById('timerStartBtn').className='btn btn-primary';
+    document.getElementById('timerLabel').textContent=step.timerLabel||'タイマー';
+    document.getElementById('timerProgressFill').style.width='100%';
+    updateTimerDisplay();
+    agitState='idle'; agitElapsed=0;
+    updateAgitStatus60();
+  } else if(step.timer) {
+    ta.classList.add('visible');
+    as.classList.remove('visible');
+    timerRemaining=step.timer; timerTotal=step.timer; timerRunning=false;
+    document.getElementById('timerStartBtn').textContent='▶ スタート';
+    document.getElementById('timerStartBtn').className='btn btn-primary';
+    document.getElementById('timerLabel').textContent=step.timerLabel||'タイマー';
+    document.getElementById('timerProgressFill').style.width='100%';
+    updateTimerDisplay();
+    if(step.agitation){
+      ah.classList.add('visible');
+      ah.innerHTML='🔄 '+step.agitation.replace(/\n/g,'<br>');
+    } else { ah.classList.remove('visible'); }
+  } else {
+    ta.classList.remove('visible');
+    as.classList.remove('visible');
+    if(step.agitation){
+      ah.classList.add('visible');
+      ah.innerHTML='🔄 '+step.agitation.replace(/\n/g,'<br>');
+    } else { ah.classList.remove('visible'); }
   }
 
-  function bestCombinations(sceneKey, mode, iso) {
-    const ev = targetEV(sceneKey, mode, iso);
-    return SCENES[sceneKey].apertures[mode].map(ap => {
-      const idealShutter = (ap * ap) / Math.pow(2, ev);
-      let best = SHUTTER_SPEEDS[0], minDiff = Infinity;
-      for (const s of SHUTTER_SPEEDS) {
-        const diff = Math.abs(Math.log2(s.value) - Math.log2(idealShutter));
-        if (diff < minDiff) { minDiff = diff; best = s; }
+  document.getElementById('prevBtn').style.opacity=currentStep===0?'0.3':'1';
+  document.getElementById('prevBtn').disabled=currentStep===0;
+  const nb=document.getElementById('nextBtn');
+  if(currentStep===steps.length-1){nb.textContent='現像完了 ✓';nb.className='btn btn-success';}
+  else{nb.textContent='次のステップ →';nb.className='btn btn-primary';}
+}
+
+// ---- 撹拌ガイド（漂白・定着：60秒インターバル）----
+function updateAgitStatus60() {
+  const phaseEl = document.getElementById('agitPhase');
+  const msgEl = document.getElementById('agitMessage');
+  const cdEl = document.getElementById('agitCountdown');
+  const nextEl = document.getElementById('agitNext');
+  const elapsed = agitElapsed;
+  const CONTINUOUS_END = 30;
+  const INTERVAL = 60;
+
+  if(agitState==='idle') {
+    phaseEl.textContent='AGITATION GUIDE';
+    msgEl.textContent='液を注いだらスタート';
+    msgEl.className='agit-message';
+    cdEl.textContent=''; nextEl.textContent=''; return;
+  }
+  if(elapsed===0) {
+    phaseEl.textContent='0秒 — バンピング';
+    msgEl.textContent='🔨 コンコン叩いて気泡を抜く';
+    msgEl.className='agit-message active';
+    cdEl.textContent=''; nextEl.textContent='→ すぐ連続撹拌を開始'; return;
+  }
+  if(elapsed < CONTINUOUS_END) {
+    const rem = CONTINUOUS_END - elapsed;
+    phaseEl.textContent=`${elapsed}秒経過 — 連続撹拌中`;
+    msgEl.textContent='🔄 連続撹拌してください';
+    msgEl.className='agit-message active';
+    cdEl.textContent=String(rem);
+    nextEl.textContent='→ 30秒で連続撹拌終了'; return;
+  }
+  if(elapsed === CONTINUOUS_END) {
+    phaseEl.textContent='30秒 — 連続撹拌終了';
+    msgEl.textContent='✅ 連続撹拌終了、静置';
+    msgEl.className='agit-message done';
+    cdEl.textContent=''; nextEl.textContent='→ 次の撹拌：90秒'; return;
+  }
+  const afterCont = elapsed - CONTINUOUS_END;
+  const cyclePos = afterCont % INTERVAL;
+  const cycleNum = Math.floor(afterCont / INTERVAL);
+  const nextAgitAt = CONTINUOUS_END + (cycleNum + 1) * INTERVAL;
+
+  if(cyclePos === 0 && afterCont >= INTERVAL) {
+    phaseEl.textContent=`${elapsed}秒 — 撹拌タイミング！`;
+    msgEl.textContent='🔄 撹拌してください（10秒）';
+    msgEl.className='agit-message active';
+    cdEl.textContent='10';
+    nextEl.textContent=`→ 次の撹拌：${nextAgitAt}秒`;
+  } else if(cyclePos <= 10 && afterCont >= INTERVAL) {
+    phaseEl.textContent=`${elapsed}秒経過 — 撹拌中`;
+    msgEl.textContent='🔄 撹拌中…';
+    msgEl.className='agit-message active';
+    cdEl.textContent=String(10-cyclePos);
+    nextEl.textContent=`→ 次の撹拌：${nextAgitAt}秒`;
+  } else {
+    const untilNext = nextAgitAt - elapsed;
+    phaseEl.textContent=`${elapsed}秒経過 — 静置中`;
+    msgEl.textContent='静置';
+    msgEl.className='agit-message';
+    cdEl.textContent='';
+    nextEl.textContent=`→ 次の撹拌まで：${untilNext}秒（${nextAgitAt}秒）`;
+  }
+}
+
+// ---- 撹拌ガイド（現像：30秒インターバル）----
+// タイムライン（現像ステップ）:
+// 0秒: スタート → バンピング促し
+// 0〜30秒: 連続撹拌フェーズ
+// 30秒: 連続撹拌終了アナウンス
+// 以降30秒ごと: 撹拌してください（10秒間アナウンス）
+
+function updateAgitStatus() {
+  const el = document.getElementById('agitStatus');
+  const phaseEl = document.getElementById('agitPhase');
+  const msgEl = document.getElementById('agitMessage');
+  const cdEl = document.getElementById('agitCountdown');
+  const nextEl = document.getElementById('agitNext');
+
+  const elapsed = agitElapsed;
+  const CONTINUOUS_END = 30;
+  const INTERVAL = 30;
+
+  if(agitState==='idle') {
+    phaseEl.textContent='AGITATION GUIDE';
+    msgEl.textContent='液を注いだらスタート';
+    msgEl.className='agit-message';
+    cdEl.textContent='';
+    nextEl.textContent='';
+    return;
+  }
+
+  if(elapsed===0) {
+    // バンピング
+    phaseEl.textContent='0秒 — バンピング';
+    msgEl.textContent='🔨 コンコン叩いて気泡を抜く';
+    msgEl.className='agit-message active';
+    cdEl.textContent='';
+    nextEl.textContent='→ すぐ連続撹拌を開始';
+    return;
+  }
+
+  if(elapsed < CONTINUOUS_END) {
+    const rem = CONTINUOUS_END - elapsed;
+    phaseEl.textContent=`${elapsed}秒経過 — 連続撹拌中`;
+    msgEl.textContent='🔄 連続撹拌してください';
+    msgEl.className='agit-message active';
+    cdEl.textContent=String(rem);
+    nextEl.textContent='→ 30秒で連続撹拌終了';
+    return;
+  }
+
+  if(elapsed === CONTINUOUS_END) {
+    phaseEl.textContent='30秒 — 連続撹拌終了';
+    msgEl.textContent='✅ 連続撹拌終了、静置';
+    msgEl.className='agit-message done';
+    cdEl.textContent='';
+    nextEl.textContent='→ 次の撹拌：60秒';
+    return;
+  }
+
+  // インターバル撹拌フェーズ（61秒〜）
+  // 撹拌タイミング: 60, 90, 120... (afterCont = 30, 60, 90...)
+  const afterCont = elapsed - CONTINUOUS_END;
+  const cyclePos = afterCont % INTERVAL; // 0〜29
+  const cycleNum = Math.floor(afterCont / INTERVAL);
+  const nextAgitAt = CONTINUOUS_END + (cycleNum + 1) * INTERVAL;
+
+  if(cyclePos === 0 && afterCont >= INTERVAL) {
+    phaseEl.textContent=`${elapsed}秒 — 撹拌タイミング！`;
+    msgEl.textContent='🔄 撹拌してください（10秒）';
+    msgEl.className='agit-message active';
+    cdEl.textContent='10';
+    nextEl.textContent=`→ 次の撹拌：${nextAgitAt}秒`;
+  } else if(cyclePos <= 10 && afterCont >= INTERVAL) {
+    phaseEl.textContent=`${elapsed}秒経過 — 撹拌中`;
+    msgEl.textContent='🔄 撹拌中…';
+    msgEl.className='agit-message active';
+    cdEl.textContent=String(10-cyclePos);
+    nextEl.textContent=`→ 次の撹拌：${nextAgitAt}秒`;
+  } else {
+    const untilNext = nextAgitAt - elapsed;
+    phaseEl.textContent=`${elapsed}秒経過 — 静置中`;
+    msgEl.textContent='静置';
+    msgEl.className='agit-message';
+    cdEl.textContent='';
+    nextEl.textContent=`→ 次の撹拌まで：${untilNext}秒（${nextAgitAt}秒）`;
+  }
+}
+
+// ---- Audio ----
+let audioCtx=null;
+function getAudioCtx(){if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playBeep(freq,duration,volume,delay){
+  try{
+    const ctx=getAudioCtx();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.value=freq;osc.type='sine';
+    const t=ctx.currentTime+(delay||0);
+    gain.gain.setValueAtTime(volume||0.4,t);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+duration);
+    osc.start(t);osc.stop(t+duration);
+  }catch(e){}
+}
+function playFinishSound(){[0,0.3,0.6].forEach(o=>playBeep(880,0.25,0.6,o));}
+function playAgitStart(){playBeep(660,0.15,0.5);setTimeout(()=>playBeep(660,0.15,0.5),200);}
+function playAgitEnd(){playBeep(440,0.2,0.4);}
+function playContinuousEnd(){playBeep(550,0.3,0.5);setTimeout(()=>playBeep(550,0.3,0.5),350);}
+
+// ---- Timer ----
+function updateTimerDisplay(){
+  const m=Math.floor(timerRemaining/60),s=timerRemaining%60;
+  const el=document.getElementById('timerDisplay');
+  el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+  el.className='timer-display';
+  if(timerRunning) el.classList.add(timerRemaining<=10?'warning':'running');
+  document.getElementById('timerProgressFill').style.width=((timerRemaining/timerTotal)*100)+'%';
+}
+
+function startTimer(){
+  if(timerRunning){
+    clearInterval(timerInterval);
+    timerRunning=false;
+    document.getElementById('timerStartBtn').textContent='▶ 再開';
+    document.getElementById('timerStartBtn').className='btn btn-primary';
+    updateTimerDisplay(); return;
+  }
+  try{getAudioCtx();}catch(e){}
+  timerRunning=true;
+  document.getElementById('timerStartBtn').textContent='⏸ 一時停止';
+  document.getElementById('timerStartBtn').className='btn btn-outline';
+
+  const step=steps[currentStep];
+  if(step.agitationGuide){
+    agitState='running'; agitElapsed=0;
+    speak('バンピングしてください。');
+    setTimeout(()=>speak('連続撹拌を開始してください。'), 3000);
+    updateAgitStatus();
+  }
+  if(step.agitationGuide60){
+    agitState='running'; agitElapsed=0;
+    speak('バンピングしてください。');
+    setTimeout(()=>speak('連続撹拌を開始してください。'), 3000);
+    updateAgitStatus60();
+  }
+
+  timerInterval=setInterval(()=>{
+    timerRemaining--;
+    agitElapsed++;
+    updateTimerDisplay();
+
+    if(step.agitationGuide){
+      const e=agitElapsed;
+      const CONT=30, INT=30;
+      if(e===CONT){ playContinuousEnd(); speak('連続撹拌終了です。静置してください。'); }
+      if(e>CONT){
+        const afterCont=e-CONT;
+        if(afterCont%INT===0){ playAgitStart(); speak('撹拌してください。'); }
+        if(afterCont%INT===10 && afterCont>=40){ playAgitEnd(); speak('撹拌終了。静置してください。'); }
       }
-      return { aperture: ap, shutter: best.label, evDiff: Math.log2((ap*ap)/best.value) - ev };
-    });
-  }
+      updateAgitStatus();
+    }
 
-  // ── App ─────────────────────────────────────────────────────
-  function App() {
-    const [mode, setMode] = useState("sunny16");
-    const [isoInput, setIsoInput] = useState("400");
-    const [scene, setScene] = useState("sunny_bright");
+    if(step.agitationGuide60){
+      const e=agitElapsed;
+      const CONT=30, INT=60;
+      if(e===CONT){ playContinuousEnd(); speak('連続撹拌終了です。静置してください。'); }
+      if(e>CONT){
+        const afterCont=e-CONT;
+        if(afterCont%INT===0){ playAgitStart(); speak('撹拌してください。'); }
+        if(afterCont%INT===10 && afterCont>=70){ playAgitEnd(); speak('撹拌終了。静置してください。'); }
+      }
+      updateAgitStatus60();
+    }
 
-    const iso = useMemo(() => { const n = parseInt(isoInput); return (!isNaN(n) && n > 0) ? n : 400; }, [isoInput]);
-    const combos = useMemo(() => bestCombinations(scene, mode, iso), [scene, mode, iso]);
-    const accent = mode === "sunny16" ? C.accent16 : C.accent8;
-    const sceneData = SCENES[scene];
-    const evBase = targetEV(scene, mode, iso);
-    const evFromS16 = evBase - (15 + isoEVCorrection(iso));
+    // 残り10秒ビープ
+    if(timerRemaining>0&&timerRemaining<=10) playBeep(440,0.1,0.3);
+    if(timerRemaining===10) speak('残り10秒です。');
 
-    const btn = (onClick, active, col, children, extra = {}) =>
-      e("button", {
-        onClick,
-        style: {
-          fontFamily: mono, cursor: "pointer", border: `1px solid ${active ? col : C.border}`,
-          background: active ? col : "transparent", color: active ? "#111" : C.textDim,
-          borderRadius: 2, transition: "all 0.15s", fontWeight: active ? 700 : 400, ...extra
-        }
-      }, children);
+    if(timerRemaining<=0){
+      clearInterval(timerInterval);
+      timerRunning=false;
+      agitState='done';
+      document.getElementById('timerDisplay').textContent='終了！';
+      document.getElementById('timerDisplay').className='timer-display';
+      document.getElementById('timerStartBtn').textContent='✓ 完了';
+      document.getElementById('timerStartBtn').className='btn btn-success';
+      playFinishSound();
+      speak('現像終了です。現像液を回収してください。');
+      if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+    }
+  },1000);
+}
 
-    return e("div", { style: { minHeight: "100vh", background: C.bg, color: C.text, fontFamily: mono } },
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerRunning=false;
+  timerRemaining=steps[currentStep]?.timer||0;
+  agitState='idle'; agitElapsed=0;
+  document.getElementById('timerStartBtn').textContent=steps[currentStep]?.agitationGuide?'▶ 液を注いだ → スタート':'▶ スタート';
+  document.getElementById('timerStartBtn').className='btn btn-primary';
+  updateTimerDisplay();
+  if(steps[currentStep]?.agitationGuide) updateAgitStatus();
+}
 
-      // Header
-      e("div", { style: { borderBottom: `1px solid ${C.border}`, padding: "16px 20px 12px", display: "flex", alignItems: "baseline", gap: 10 } },
-        e("span", { style: { fontSize: 10, letterSpacing: "0.2em", color: C.textDim } }, "Exposure"),
-        e("span", { style: { fontSize: 17, fontWeight: 700, letterSpacing: "0.04em" } }, " FIELD GUIDE"),
-      ),
+function clearTimers(){clearInterval(timerInterval);timerRunning=false;}
 
-      e("div", { style: { padding: "18px 20px", maxWidth: 480 } },
+function nextStep(){clearTimers();currentStep++;renderStep();window.scrollTo({top:0,behavior:'smooth'});}
+function prevStep(){if(currentStep===0)return;clearTimers();currentStep--;renderStep();window.scrollTo({top:0,behavior:'smooth'});}
 
-        // Mode
-        e("div", { style: { marginBottom: 22 } },
-          e("div", { style: { fontSize: 10, letterSpacing: "0.2em", color: C.textDim, marginBottom: 8 } }, "MODE"),
-          e("div", { style: { display: "flex", border: `1px solid ${C.border}`, borderRadius: 2, overflow: "hidden", width: "fit-content" } },
-            ...[
-              { key: "sunny16", label: "SUNNY 16",  desc: "F16 厳密基準", col: C.accent16 },
-              { key: "otaky8",  label: "OTAKKY 8", desc: "F8〜11 実戦派", col: C.accent8 },
-            ].map(m =>
-              e("button", {
-                key: m.key, onClick: () => setMode(m.key),
-                style: {
-                  padding: "9px 20px", fontFamily: mono, fontSize: 12, letterSpacing: "0.08em",
-                  fontWeight: mode === m.key ? 700 : 400, border: "none", cursor: "pointer",
-                  background: mode === m.key ? m.col : "transparent",
-                  color: mode === m.key ? "#111" : C.textDim, transition: "all 0.15s",
-                }
-              },
-                m.label,
-                e("span", { style: { display: "block", fontSize: 9, fontWeight: 400, opacity: 0.7, marginTop: 1 } }, m.desc)
-              )
-            )
-          )
-        ),
+function showComplete(){
+  document.getElementById('guideScreen').classList.add('hidden');
+  document.getElementById('completeScreen').classList.add('visible');
+  const devSec=calcDevSec();
+  const useNum=totalUses+1;
+  const pushLabel=pushStops===0?'標準':pushStops>0?`+${pushStops}段増感`:`${pushStops}段減感`;
+  const nextTotal=totalUses+1;
+  const nextDevSec=Math.round(Math.round(BASE_SEC*Math.pow(1.03,nextTotal))*(PUSH_MULT[String(pushStops)]||1.0));
 
-        // ISO
-        e("div", { style: { marginBottom: 20 } },
-          e("div", { style: { fontSize: 10, letterSpacing: "0.2em", color: C.textDim, marginBottom: 8 } }, "ISO"),
-          e("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } },
-            ...[100, 200, 400, 800, 1600].map(v =>
-              btn(() => setIsoInput(String(v)), iso === v, accent, v, { padding: "6px 13px", fontSize: 13 })
-            ),
-            e("input", {
-              type: "number", value: isoInput, onChange: ev => setIsoInput(ev.target.value),
-              placeholder: "任意",
-              style: { width: 68, padding: "6px 10px", fontSize: 13, fontFamily: mono, background: "transparent", color: C.text, border: `1px solid ${C.borderHi}`, borderRadius: 2, outline: "none" }
-            })
-          ),
-          ![100,200,400,800,1600].includes(iso) && e("div", { style: { marginTop: 6, fontSize: 11, color: C.textDim } },
-            `ISO ${iso} — サニー16基準から ${isoEVCorrection(iso) >= 0 ? "+" : ""}${Math.round(isoEVCorrection(iso)*10)/10} 段補正`
-          )
-        ),
+  // 完了後に使用回数を保存
+  saveUses(nextTotal);
 
-        // Scene
-        e("div", { style: { marginBottom: 24 } },
-          e("div", { style: { fontSize: 10, letterSpacing: "0.2em", color: C.textDim, marginBottom: 10 } }, "シーン"),
-          ...TIME_GROUPS.map(g =>
-            e("div", { key: g.label, style: { marginBottom: 10 } },
-              e("div", { style: { fontSize: 9, color: C.textMute, letterSpacing: "0.15em", marginBottom: 5 } }, g.label),
-              e("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } },
-                ...g.keys.map(k =>
-                  btn(() => setScene(k), scene === k, accent,
-                    `${SCENES[k].icon} ${SCENES[k].sub}`,
-                    { padding: "6px 11px", fontSize: 11 }
-                  )
-                )
-              )
-            )
-          )
-        ),
+  document.getElementById('completeStats').innerHTML=`
+    <div class="stat-row"><span class="stat-label">現像時間</span><span class="stat-val">${fmtSecLong(devSec)}</span></div>
+    <div class="stat-row"><span class="stat-label">液の使用回数（今回）</span><span class="stat-val">${useNum}回目</span></div>
+    <div class="stat-row"><span class="stat-label">増感設定</span><span class="stat-val">${pushLabel}</span></div>
+    <div class="stat-row"><span class="stat-label">液の累計使用回数</span><span class="stat-val">${nextTotal}回完了 💾</span></div>
+  `;
+  document.getElementById('nextSessionBox').innerHTML=
+    `<strong>次回の現像時間（参考）</strong><br>${nextTotal+1}回目として ${fmtSecLong(nextDevSec)}${pushStops!==0?`（${pushLabel}）`:''}`;
+}
 
-        // Results
-        e("div", { style: { borderTop: `1px solid ${C.border}`, paddingTop: 20 } },
-          e("div", { style: { marginBottom: 12, display: "flex", alignItems: "center", gap: 8 } },
-            e("span", { style: { fontSize: 9, letterSpacing: "0.2em", color: C.textMute } }, "推奨設定"),
-            e("span", { style: { fontSize: 10, color: C.textDim } }, `${sceneData.icon} ${sceneData.label} · ${sceneData.sub} · ISO ${iso}`)
-          ),
-
-          e("div", { style: { display: "grid", gap: 2, marginBottom: 14 } },
-            ...combos.map(({ aperture, shutter, evDiff }, i) => {
-              const isHi = i === sceneData.highlight;
-              const diffStr = Math.abs(evDiff) < 0.15 ? "±0"
-                : evDiff > 0 ? `+${(Math.round(evDiff*3)/3).toFixed(1)}段`
-                : `${(Math.round(evDiff*3)/3).toFixed(1)}段`;
-              return e("div", {
-                key: i,
-                style: { display: "grid", gridTemplateColumns: "88px 96px 1fr", alignItems: "center", padding: "9px 12px", background: isHi ? C.surface : "transparent", border: `1px solid ${isHi ? accent+"55" : "transparent"}`, borderRadius: 2 }
-              },
-                e("span", { style: { fontSize: 19, fontWeight: 700, color: isHi ? C.text : C.textMute, letterSpacing: "-0.02em" } }, `F${aperture}`),
-                e("span", { style: { fontSize: 19, fontWeight: 700, color: isHi ? C.text : C.textMute, letterSpacing: "-0.02em" } }, shutter),
-                e("span", { style: { fontSize: 10, color: isHi ? accent : C.textMute } }, isHi ? "◀ おすすめ" : diffStr)
-              );
-            })
-          ),
-
-          // EV + 絞り比較パネル
-          e("div", { style: { background: C.surface, borderRadius: 2, overflow: "hidden" } },
-            // EV行
-            e("div", { style: { padding: "8px 12px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" } },
-              e("span", { style: { fontSize: 10, color: C.textMute } }, "EV"),
-              e("span", { style: { fontSize: 14, fontWeight: 700, color: accent } },
-                `${Math.round(evBase*10)/10}`,
-                e("span", { style: { fontSize: 10, fontWeight: 400, color: C.textMute, marginLeft: 8 } },
-                  `(サニー16基準 ${evFromS16 >= 0 ? "+" : ""}${Math.round(evFromS16*10)/10} 段)`
-                )
-              )
-            ),
-            // 絞りセット比較
-            e("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr" } },
-              ...[
-                { key: "sunny16", label: "SUNNY 16",  col: C.accent16 },
-                { key: "otaky8",  label: "OTAKKY 8", col: C.accent8 },
-              ].map(m => {
-                const aps = SCENES[scene].apertures[m.key];
-                const isActive = mode === m.key;
-                return e("div", {
-                  key: m.key,
-                  style: { padding: "10px 12px", borderRight: m.key === "sunny16" ? `1px solid ${C.border}` : "none", background: isActive ? m.col + "18" : "transparent" }
-                },
-                  e("div", { style: { fontSize: 9, color: m.col, letterSpacing: "0.15em", marginBottom: 6 } }, `${m.label}${isActive ? " ●" : ""}`),
-                  e("div", { style: { display: "flex", gap: 4, flexWrap: "wrap" } },
-                    ...aps.map((ap, i) => {
-                      const isRec = i === sceneData.highlight;
-                      return e("span", {
-                        key: ap,
-                        style: {
-                          fontSize: isRec ? 13 : 11, fontWeight: isRec ? 700 : 400,
-                          color: isRec ? (isActive ? m.col : C.text) : C.textMute,
-                          padding: isRec ? "1px 5px" : "1px 3px",
-                          border: isRec ? `1px solid ${isActive ? m.col+"88" : C.borderHi}` : "1px solid transparent",
-                          borderRadius: 2,
-                        }
-                      }, `F${ap}`);
-                    })
-                  )
-                );
-              })
-            ),
-            // 絞りセット差の注記
-            JSON.stringify(SCENES[scene].apertures.sunny16) !== JSON.stringify(SCENES[scene].apertures.otaky8) &&
-              e("div", { style: { padding: "6px 12px", borderTop: `1px solid ${C.border}`, fontSize: 9, color: C.textMute, letterSpacing: "0.06em" } },
-                "↑ モードで絞りセットが異なります"
-              )
-          )
-        )
-      )
-    );
-  }
-
-  ReactDOM.createRoot(document.getElementById("root")).render(e(App));
-  </script>
+// ---- Init ----
+initUI();
+</script>
 </body>
 </html>
